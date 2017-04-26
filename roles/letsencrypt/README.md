@@ -1,6 +1,8 @@
 This Ansible module allow you to install some scripts to generate letsencrypt
 certificates automatically.
 
+
+
 What is required for this module?
 =================================
 
@@ -230,20 +232,32 @@ configuration:
 </VirtualHost>
 ```
 
-or without the snippet installed by the ansible module:
 
+or without the snippet installed by the ansible module:
 
 ```
 <VirtualHost *:80>
     ...
     Alias /.well-known/acme-challenge/  /var/lib/letsencrypt/challenges/
-    
     <Directory /var/lib/letsencrypt/challenges/>
         Options -Indexes FollowSymLinks
         AllowOverride All
         Order allow,deny
         allow from all
     </Directory>
+    ...
+</VirtualHost>
+```
+
+If you redirect everything from port 80 to http 443, you should
+avoid to redirect requests to `/.well-known/acme-challenge/`. A snippet
+is provided to configure correctly a redirection.
+
+```
+<VirtualHost *:80>
+    ...
+    Include snippets/letsencrypt_challenge.conf
+    Include snippets/letsencrypt_redirect80.conf
     ...
 </VirtualHost>
 ```
