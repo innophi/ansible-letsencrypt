@@ -3,6 +3,8 @@
 # For the full copyright and license information (MIT), see the LICENSE
 # file that was distributed with this source code.
 
+# Version 1.1.0
+
 set -e
 
 BASEDIR=/var/lib/letsencrypt
