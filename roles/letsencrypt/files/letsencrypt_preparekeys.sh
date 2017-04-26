@@ -12,9 +12,10 @@ ACCOUNT_KEY=$BASEDIR/private/account.key
 DOMAIN=""
 CSR_SUBJ=""
 FORCE=""
+SUBJECTALTNAME=""
 usage()
 {
-    echo "letsencrypt_preparekeys.sh <domain> <csr subject>"
+    echo "letsencrypt_preparekeys.sh <domain> <csr subject> [<otherdomain>]*"
     echo "  generates the private key and the CSR for the futur cert."
     echo "  csr subject can be thing like: '/C=FR/ST=France/L=MyTown/O=MyCompany/OU=MyDepartment'."
     echo "  if the CSR already exists but subject is not equals, it will be"
@@ -50,10 +51,10 @@ case $i in
         then
             CSR_SUBJ=$i
         else
-            echo "ERROR: Too many parameters: $i"
-            echo ""
-            usage
-            exit 1
+           if [ "$SUBJECTALTNAME" != "" ]; then
+                SUBJECTALTNAME=$SUBJECTALTNAME","
+           fi
+           SUBJECTALTNAME=$SUBJECTALTNAME"DNS:"$i
         fi
     fi
     ;;
@@ -115,7 +116,12 @@ if [ -f "$DOMAIN_ACTIVATE" ]; then
 fi
 
 openssl genrsa 4096 > "$DOMAIN_KEY"
-openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "$CSR_SUBJ/CN=$DOMAIN" > "$DOMAIN_CSR"
+
+if [ "$SUBJECTALTNAME" == "" ]; then
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "$CSR_SUBJ/CN=$DOMAIN" > "$DOMAIN_CSR"
+else
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "$CSR_SUBJ/CN=$DOMAIN" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=$SUBJECTALTNAME")) > "$DOMAIN_CSR"
+fi
 
 if [ ! -f "$DOMAIN_ACTIVATE" ]; then
     touch $DOMAIN_ACTIVATE
