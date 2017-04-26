@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# (c) 2017 Innophi
+# For the full copyright and license information (MIT), see the LICENSE
+# file that was distributed with this source code.
+
+set -e
+
+BASEDIR=/var/lib/letsencrypt
+CHALLENGEDIR=$BASEDIR/challenges/
+ACCOUNT_KEY=$BASEDIR/private/account.key
+
+DOMAIN=""
+CSR_SUBJ=""
+FORCE=""
+usage()
+{
+    echo "letsencrypt_preparekeys.sh <domain> <csr subject>"
+    echo "  generates the private key and the CSR for the futur cert."
+    echo "  csr subject can be thing like: '/C=FR/ST=France/L=MyTown/O=MyCompany/OU=MyDepartment'."
+    echo "  if the CSR already exists but subject is not equals, it will be"
+    echo "  regenerated."
+    echo ""
+    echo "options:"
+    echo "  --force, -f: erase existing cert, CSR and private key"
+    echo ""
+}
+
+
+for i in $*
+do
+case $i in
+    -f|--force)
+    FORCE="1"
+    ;;
+    -h|--help)
+    usage
+    ;;
+    -*)
+      echo "ERROR: Unknown option: $i"
+      echo ""
+      usage
+      exit 1
+    ;;
+    *)
+    if [ "$DOMAIN" == "" ]
+    then
+        DOMAIN=$i
+    else
+        if [ "$CSR_SUBJ" == "" ]
+        then
+            CSR_SUBJ=$i
+        else
+            echo "ERROR: Too many parameters: $i"
+            echo ""
+            usage
+            exit 1
+        fi
+    fi
+    ;;
+esac
+done
+
+if [ "$DOMAIN" == "" ]; then
+    echo "Error: domain is missing"
+    exit 1
+fi
+
+DOMAIN_KEY=$BASEDIR/private/$DOMAIN.key
+DOMAIN_CSR=$BASEDIR/private/$DOMAIN.csr
+DOMAIN_CRT=$BASEDIR/certs/$DOMAIN.crt
+DOMAIN_CHAINED_PEM=$BASEDIR/certs/$DOMAIN.pem
+DOMAIN_ACTIVATE=$BASEDIR/domains/$DOMAIN
+
+GENERATE=""
+
+if [ "$FORCE" == "" ]; then
+    if [ -f "$DOMAIN_CSR" ]; then
+        CURRENTSUBJ=$(openssl req -in $DOMAIN_CSR -noout -subject  | cut -d= -f2-)
+        if [ "$CURRENTSUBJ" != "$CSR_SUBJ/CN=$DOMAIN" ]; then
+            GENERATE="1"
+        fi
+    else
+        GENERATE="1"
+    fi
+
+    if [ ! -f "$DOMAIN_KEY" ]; then
+        GENERATE="1"
+    fi
+
+else
+    GENERATE="1"
+fi
+
+if [ "$GENERATE" == "" ]; then
+    if [ ! -f "$DOMAIN_ACTIVATE" ]; then
+        touch $DOMAIN_ACTIVATE
+    fi
+    exit 0
+fi
+
+if [ -f "$DOMAIN_CRT" ]; then
+    rm -f "$DOMAIN_CRT"
+fi
+if [ -f "$DOMAIN_KEY" ]; then
+    rm -f "$DOMAIN_KEY"
+fi
+if [ -f "$DOMAIN_CHAINED_PEM" ]; then
+    rm -f "$DOMAIN_CHAINED_PEM"
+fi
+if [ -f "$DOMAIN_CSR" ]; then
+    rm -f "$DOMAIN_CSR"
+fi
+if [ -f "$DOMAIN_ACTIVATE" ]; then
+    rm -f "$DOMAIN_ACTIVATE"
+fi
+
+openssl genrsa 4096 > "$DOMAIN_KEY"
+openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "$CSR_SUBJ/CN=$DOMAIN" > "$DOMAIN_CSR"
+
+if [ ! -f "$DOMAIN_ACTIVATE" ]; then
+    touch $DOMAIN_ACTIVATE
+fi
+

@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# (c) 2017 Innophi
+# For the full copyright and license information (MIT), see the LICENSE
+# file that was distributed with this source code.
+
+
+BASEDIR=/var/lib/letsencrypt
+CHALLENGEDIR=$BASEDIR/challenges/
+ACCOUNT_KEY=$BASEDIR/private/account.key
+
+DOMAIN=""
+usage()
+{
+    echo "letsencrypt_remove.sh [options] <domain>"
+    echo "  remove certificates, private keys etc.."
+    echo ""
+    echo "options:"
+    echo "  --deactivate: only deactivate the domain"
+    echo ""
+}
+
+DEACTIVATE=""
+
+for i in $*
+do
+case $i in
+    --deactivate)
+    DEACTIVATE="y"
+    ;;
+    -h|--help)
+    usage
+    ;;
+    -*)
+      echo "ERROR: Unknown option: $i"
+      echo ""
+      usage
+      exit 1
+    ;;
+    *)
+    if [ "$DOMAIN" == "" ]
+    then
+        DOMAIN=$i
+    else
+        echo "ERROR: Too many parameters: $i"
+        echo ""
+        usage
+        exit 1
+    fi
+    ;;
+esac
+done
+
+if [ "$DOMAIN" == "" ]; then
+    echo "Error: domain is missing"
+    exit 1
+fi
+
+DOMAIN_KEY=$BASEDIR/private/$DOMAIN.key
+DOMAIN_CSR=$BASEDIR/private/$DOMAIN.csr
+DOMAIN_CRT=$BASEDIR/certs/$DOMAIN.crt
+DOMAIN_CHAINED_PEM=$BASEDIR/certs/$DOMAIN.pem
+DOMAIN_ACTIVATE=$BASEDIR/domains/$DOMAIN
+
+if [ "$DEACTIVATE" == "" ]; then
+    if [ -f "$DOMAIN_CRT" ]; then
+        rm -f "$DOMAIN_CRT"
+    fi
+    if [ -f "$DOMAIN_KEY" ]; then
+        rm -f "$DOMAIN_KEY"
+    fi
+    if [ -f "$DOMAIN_CHAINED_PEM" ]; then
+        rm -f "$DOMAIN_CHAINED_PEM"
+    fi
+    if [ -f "$DOMAIN_CSR" ]; then
+        rm -f "$DOMAIN_CSR"
+    fi
+fi
+
+if [ -f "$DOMAIN_ACTIVATE" ]; then
+    rm -f "$DOMAIN_ACTIVATE"
+fi

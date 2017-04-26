@@ -1,0 +1,101 @@
+#!/bin/bash
+# (c) 2017 Innophi
+# For the full copyright and license information (MIT), see the LICENSE
+# file that was distributed with this source code.
+
+BASEDIR=/var/lib/letsencrypt
+CHALLENGEDIR=$BASEDIR/challenges/
+ACCOUNT_KEY=$BASEDIR/private/account.key
+
+DOMAIN=""
+RELOAD_WEB="y"
+
+usage()
+{
+    echo "letsencrypt_generate.sh [options] <domain>"
+    echo ""
+    echo "options:"
+    echo "  -n|--no-reload  :  don't reload configuration of the web server"
+    echo ""
+}
+
+
+for i in $*
+do
+case $i in
+    -n|--no-reload)
+    RELOAD_WEB=""
+    ;;
+    -h|--help)
+    usage
+    ;;
+    -*)
+      echo "ERROR: Unknown option: $i"
+      echo ""
+      usage
+      exit 1
+    ;;
+    *)
+    if [ "$DOMAIN" == "" ]
+    then
+        DOMAIN=$i
+    else
+        echo "ERROR: Too many parameters: $i"
+        echo ""
+        usage
+        exit 1
+    fi
+    ;;
+esac
+done
+
+if [ "$DOMAIN" == "" ]; then
+    echo "Error: domain is missing"
+    exit 1
+fi
+
+DOMAIN_KEY=$BASEDIR/private/$DOMAIN.key
+DOMAIN_CSR=$BASEDIR/private/$DOMAIN.csr
+DOMAIN_CRT=$BASEDIR/certs/$DOMAIN.crt
+DOMAIN_CHAINED_PEM=$BASEDIR/certs/$DOMAIN.pem
+
+if [ ! -f $DOMAIN_KEY ]; then
+    echo "ERROR: domain key '$DOMAIN_KEY' does not exists or you don't have the right to access to it."
+    exit 2
+fi
+
+DAYSREMAINING=0
+if [ -f $DOMAIN_CRT ]; then
+    ENDDATE=$(openssl x509 -in $DOMAIN_CRT -noout -enddate | cut -d= -f2-)
+    DAYSREMAINING=$(( (`date -d "$ENDDATE" +%s` - `date -d "00:00" +%s`) / (24*3600) ))
+fi
+
+if [ $DAYSREMAINING -lt 15 ]
+then
+    if [ -f $DOMAIN_CRT ]; then
+        cp $DOMAIN_CRT $DOMAIN_CRT.bak
+    fi
+    python /usr/local/bin/acme_tiny.py --account-key $ACCOUNT_KEY --csr $DOMAIN_CSR --acme-dir $CHALLENGEDIR > $DOMAIN_CRT
+    if [ $? -ne 0 ]; then
+        if [ -f $DOMAIN_CRT ]; then
+            if [ -f $DOMAIN_CRT.bak ]; then
+                cp $DOMAIN_CRT.bak $DOMAIN_CRT
+            else
+                rm -f $DOMAIN_CRT
+            fi
+        fi
+        exit 3
+    else
+        cat $DOMAIN_CRT $BASEDIR/letsencrypt_intermediate.pem > $DOMAIN_CHAINED_PEM
+    fi
+
+    if [ "$RELOAD_WEB" == "y" ]; then
+        if [ -x /usr/sbin/nginx ]; then
+            sudo service nginx reload
+        else
+            if [ -x /usr/sbin/apache2ctl ]; then
+                sudo service apache2 reload
+            fi
+        fi
+    fi
+fi

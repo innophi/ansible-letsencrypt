@@ -1,0 +1,1 @@
+letsencrypt ALL = NOPASSWD: /usr/sbin/service nginx reload,/usr/sbin/service apache2 reload
