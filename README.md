@@ -29,9 +29,14 @@ All data are hosted into a `/var/lib/letsencrypt` directory:
    certificate of Let's Encrypt (it is provided into `roles/letsencrypt/files/lets-encrypt-x3-cross-signed.pem`)
 
 
-Scripts are here provided inside an Ansible role, but you can install them
-by hand. See [roles/letsencrypt/README.md](roles/letsencrypt/README.md) to use 
-the Ansible role and to have examples of Apache/Nginx configurations.
+This repository provides an Ansible role that install and configure
+everything. See [roles/letsencrypt/README.md](roles/letsencrypt/README.md).
+
+You can also install and configure by hand. See below.
+
+After running the Ansible role or installing by hand, see the section 
+"How to use scripts" to know how to create and generate certificates.
+
 
 How to install by hand
 ----------------------
@@ -77,7 +82,8 @@ You can then generate the certificate:
 letsencrypt_generate.sh my.domain.com
 ```
 
-Then you can setup a virtual host on the port 443 in your Apache/Nginx configuration.
+The final step is to setup a virtual host on the port 443 in your 
+Apache/Nginx configuration.
 
 You can run `letsencrypt_generate.sh my.domain.com` as many times you want,
 but it will regenerate the certificate only if there is less than 15 days before
