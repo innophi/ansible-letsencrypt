@@ -1,0 +1,36 @@
+- name: install domain keys
+  copy: content="{{ item.private_key }}"
+        dest=/var/lib/letsencrypt/private/{{ item.name }}.key
+        owner=letsencrypt group=ssl-cert mode=0640
+  with_items: "{{ letsencrypt_certificates }}"
+
+- name: Install csr keys
+  copy: content="{{ item.csr }}"
+        dest=/var/lib/letsencrypt/private/{{ item.name }}.csr
+        owner=letsencrypt group=ssl-cert mode=0640
+  with_items: "{{ letsencrypt_certificates }}"
+
+- name: Install certs
+  copy: content="{{ item.cert }}"
+        dest=/var/lib/letsencrypt/certs/{{ item.name }}.crt
+        owner=letsencrypt group=ssl-cert mode=0640 force=no
+  with_items: "{{ letsencrypt_certificates }}"
+  when: item.cert != ""
+
+- name: Install pems
+  shell: cat /var/lib/letsencrypt/certs/{{ item.name }}.crt /var/lib/letsencrypt/letsencrypt_intermediate.pem > /var/lib/letsencrypt/certs/{{ item.name }}.pem
+  args:
+     creates: /var/lib/letsencrypt/certs/{{ item.name }}.pem
+  with_items: "{{ letsencrypt_certificates }}"
+  when: item.cert != ""
+
+- name: set rights on pems
+  file: path=/var/lib/letsencrypt/certs/{{ item.name }}.pem owner=letsencrypt group=letsencrypt mode=0644
+  with_items: "{{ letsencrypt_certificates }}"
+  when: item.cert != ""
+
+- name: install domain files
+  copy: content=""
+        dest=/var/lib/letsencrypt/domains/{{ item.name }}
+        owner=letsencrypt group=letsencrypt mode=0644
+  with_items: "{{ letsencrypt_certificates }}"

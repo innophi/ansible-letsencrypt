@@ -1,0 +1,51 @@
+- name: create letsencrypt group
+  group: name=letsencrypt
+
+- name: create letsencrypt user
+  user: name=letsencrypt group=letsencrypt home=/var/lib/letsencrypt
+
+- name: create sudoer conf for letsencrypt
+  copy: src=letsencrypt.sudoer dest=/etc/sudoers.d/letsencrypt mode=0440
+
+- name: create challenges directory
+  file: path=/var/lib/letsencrypt/challenges/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+
+- name: create private directory
+  file: path=/var/lib/letsencrypt/private/ owner=letsencrypt group=ssl-cert mode=0710 state=directory
+
+- name: create certs directory
+  file: path=/var/lib/letsencrypt/certs/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+
+- name: create domains directory
+  file: path=/var/lib/letsencrypt/domains/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+
+- name: copy account key
+  copy: content="{{ letsencrypt_account_key }}"
+        dest=/var/lib/letsencrypt/private/account.key
+        owner=letsencrypt group=ssl-cert mode=0640
+
+- name: copy acme_tiny
+  copy: src=acme_tiny.py dest=/usr/local/bin/acme_tiny.py mode=0644
+
+- name: copy generation script
+  copy: src=letsencrypt_generate.sh dest=/usr/local/bin/letsencrypt_generate.sh mode=0755
+
+- name: copy util prepare script
+  copy: src=letsencrypt_preparekeys.sh dest=/usr/local/bin/letsencrypt_preparekeys.sh mode=0755
+
+- name: copy util remove script
+  copy: src=letsencrypt_remove.sh dest=/usr/local/bin/letsencrypt_remove.sh mode=0755
+
+- name: copy cron script
+  copy: src=letsencrypt_cron.sh dest=/usr/local/bin/letsencrypt_cron.sh mode=0755
+
+- name: install cron
+  cron: name="letsencrypt_cron" minute="0" hour="5" user="letsencrypt"
+        job="/usr/local/bin/letsencrypt_cron.sh"
+  when: letsencrypt_activate_cron == true
+
+- name: copy lets's encrypt intermediate certificate
+  copy: src=lets-encrypt-x3-cross-signed.pem
+        dest=/var/lib/letsencrypt/letsencrypt_intermediate.pem
+        owner=letsencrypt group=letsencrypt mode=0644
+
