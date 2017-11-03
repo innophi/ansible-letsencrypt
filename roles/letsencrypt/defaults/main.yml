@@ -4,4 +4,5 @@ letsencrypt_activate_cron: true
 
 letsencrypt_web_server:
 
-letsencrypt_certificates:
+letsencrypt_certificates: []
+
