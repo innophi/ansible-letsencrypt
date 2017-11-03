@@ -2,6 +2,7 @@
 
 letsencrypt_activate_cron: true
 
+# "apache", "nginx" or nothing
 letsencrypt_web_server:
 
 letsencrypt_certificates: []
