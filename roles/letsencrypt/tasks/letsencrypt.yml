@@ -1,3 +1,6 @@
+- name: Install ssl-cert for ssl-cert group
+  apt: name=ssl-cert state=present 
+
 - name: create letsencrypt group
   group: name=letsencrypt
 
