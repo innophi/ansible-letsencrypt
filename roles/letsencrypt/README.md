@@ -1,5 +1,9 @@
 This Ansible module allow you to install some scripts to generate letsencrypt
-certificates automatically.
+certificates automatically. 
+
+It provides some scripts and nginx/apache configuration snippets which avoid to 
+stop your server in order to generate the certificates. Only a reloading of the 
+server configuration is required.
 
 
 
@@ -216,6 +220,8 @@ server {
 
 ```
 
+Tip: it is recommended to use the [Mozilla configurator](https://mozilla.github.io/server-side-tls/ssl-config-generator/)
+to know how to configure properly ciphers and protocols.
 
 
 Apache configuration
@@ -277,4 +283,7 @@ Example of a HTTPS virtual host:
     SSLHonorCipherOrder     on
 </VirtualHost>
 ```
+
+Tip: it is recommended to use the [Mozilla configurator](https://mozilla.github.io/server-side-tls/ssl-config-generator/)
+to know how to configure properly ciphers and protocols.
 
