@@ -9,4 +9,4 @@ letsencrypt_certificates: []
 
 letsencrypt_lib_dir: "/var/lib/letsencrypt"
 
-letsencrypt_account_key: "{{ letsencrypt_lib_dir }}//private/account.key"
+letsencrypt_account_key_file: "{{ letsencrypt_lib_dir }}/private/account.key"
