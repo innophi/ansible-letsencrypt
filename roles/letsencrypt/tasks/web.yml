@@ -3,7 +3,7 @@
   when: letsencrypt_web_server == "apache"
 
 - name: copy apache snippet
-  copy: src=snippet_letsencrypt_apache.conf dest=/etc/apache2/snippets/letsencrypt_challenge.conf mode=0644
+  template: src=snippet_letsencrypt_apache.conf.j2 dest=/etc/apache2/snippets/letsencrypt_challenge.conf mode=0644
   when: letsencrypt_web_server == "apache"
 
 - name: copy apache snippet for redirection
@@ -15,5 +15,5 @@
   when: letsencrypt_web_server == "nginx"
 
 - name: copy nginx snippet
-  copy: src=snippet_letsencrypt_nginx.conf dest=/etc/nginx/snippets/letsencrypt_challenge.conf mode=0644
+  template: src=snippet_letsencrypt_nginx.conf.j2 dest=/etc/nginx/snippets/letsencrypt_challenge.conf mode=0644
   when: letsencrypt_web_server == "nginx"

@@ -7,7 +7,7 @@
 
 set -e
 
-BASEDIR=/var/lib/letsencrypt
+BASEDIR={{ letsencrypt_lib_dir }}
 CHALLENGEDIR=$BASEDIR/challenges/
 ACCOUNT_KEY=$BASEDIR/private/account.key
 
@@ -78,8 +78,8 @@ GENERATE=""
 
 if [ "$FORCE" == "" ]; then
     if [ -f "$DOMAIN_CSR" ]; then
-        CURRENTSUBJ=$(openssl req -in $DOMAIN_CSR -noout -subject  | cut -d= -f2-)
-        if [ "$CURRENTSUBJ" != "$CSR_SUBJ/CN=$DOMAIN" ]; then
+        CURRENTSUBJ=$(openssl req -in $DOMAIN_CSR -noout -subject  | cut -d= -f2- | sed  "s/ = /=/g" | sed "s/, /\//g")
+        if [ "/$CURRENTSUBJ" != "$CSR_SUBJ/CN=$DOMAIN" ]; then
             GENERATE="1"
         fi
     else

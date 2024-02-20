@@ -3,7 +3,7 @@
 # For the full copyright and license information (MIT), see the LICENSE
 # file that was distributed with this source code.
 
-for domain in $(ls /var/lib/letsencrypt/domains/)
+for domain in $(ls {{ letsencrypt_lib_dir }}/domains/)
 do
     /usr/local/bin/letsencrypt_generate.sh $domain
 done

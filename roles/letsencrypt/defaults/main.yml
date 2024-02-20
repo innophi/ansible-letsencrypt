@@ -2,8 +2,9 @@
 
 letsencrypt_activate_cron: true
 
-# "apache", "nginx" or nothing
+# apache, nginx or nothing
 letsencrypt_web_server:
 
 letsencrypt_certificates: []
 
+letsencrypt_lib_dir: "/var/lib/letsencrypt"

@@ -1,46 +1,72 @@
-- name: Install ssl-cert for ssl-cert group
-  apt: name=ssl-cert state=present 
+- name: check old directory
+  stat:
+    path: "/var/lib/letsencrypt"
+  register: lect_move_old_path_st
+  tags: [ letsencrypt, letsencrypt-copy ]
+
+- name: check new directory
+  stat:
+    path: "{{ letsencrypt_lib_dir }}"
+  register: lect_move_new_path_st
+  tags: [ letsencrypt, letsencrypt-copy ]
+
+- name: Copy existing letsencrypt directory to new directory
+  copy:
+    remote_src: true
+    src: /var/lib/letsencrypt/
+    dest: "{{ letsencrypt_lib_dir }}"
+    mode: preserve
+    owner: letsencrypt
+    group: letsencrypt
+  when: lect_move_old_path_st.stat.exists and not lect_move_new_path_st.stat.exists
+  tags: [ letsencrypt, letsencrypt-copy ]
 
 - name: create letsencrypt group
   group: name=letsencrypt
 
 - name: create letsencrypt user
-  user: name=letsencrypt group=letsencrypt home=/var/lib/letsencrypt
+  user: name=letsencrypt group=letsencrypt home={{ letsencrypt_lib_dir }}
 
 - name: create sudoer conf for letsencrypt
   copy: src=letsencrypt.sudoer dest=/etc/sudoers.d/letsencrypt mode=0440
 
+- name: create letsencrypt directory
+  file: path={{ letsencrypt_lib_dir }} owner=letsencrypt group=letsencrypt mode=0755 state=directory
+
 - name: create challenges directory
-  file: path=/var/lib/letsencrypt/challenges/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+  file: path={{ letsencrypt_lib_dir }}/challenges/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
 
 - name: create private directory
-  file: path=/var/lib/letsencrypt/private/ owner=letsencrypt group=ssl-cert mode=0710 state=directory
+  file: path={{ letsencrypt_lib_dir }}/private/ owner=letsencrypt group=ssl-cert mode=u=rwX,g=rX-w,o=-rwx state=directory recurse=yes
+  tags: [ letsencrypt, letsencrypt-copy ]
 
 - name: create certs directory
-  file: path=/var/lib/letsencrypt/certs/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+  file: path={{ letsencrypt_lib_dir }}/certs/ owner=letsencrypt group=letsencrypt mode=u=rwX,g=rX,o=rX state=directory recurse=yes
+  tags: [ letsencrypt, letsencrypt-copy ]
 
 - name: create domains directory
-  file: path=/var/lib/letsencrypt/domains/ owner=letsencrypt group=letsencrypt mode=0755 state=directory
+  file: path={{ letsencrypt_lib_dir }}/domains/ owner=letsencrypt group=letsencrypt mode=u=rwX,g=rX,o=rX state=directory
+  tags: [ letsencrypt, letsencrypt-copy ]
 
 - name: copy account key
   copy: content="{{ letsencrypt_account_key }}"
-        dest=/var/lib/letsencrypt/private/account.key
+        dest={{ letsencrypt_lib_dir }}/private/account.key
         owner=letsencrypt group=ssl-cert mode=0640
 
 - name: copy acme_tiny
   copy: src=acme_tiny.py dest=/usr/local/bin/acme_tiny.py mode=0644
 
 - name: copy generation script
-  copy: src=letsencrypt_generate.sh dest=/usr/local/bin/letsencrypt_generate.sh mode=0755
+  template: src=letsencrypt_generate.sh.j2 dest=/usr/local/bin/letsencrypt_generate.sh mode=0755
 
 - name: copy util prepare script
-  copy: src=letsencrypt_preparekeys.sh dest=/usr/local/bin/letsencrypt_preparekeys.sh mode=0755
+  template: src=letsencrypt_preparekeys.sh.j2 dest=/usr/local/bin/letsencrypt_preparekeys.sh mode=0755
 
 - name: copy util remove script
-  copy: src=letsencrypt_remove.sh dest=/usr/local/bin/letsencrypt_remove.sh mode=0755
+  template: src=letsencrypt_remove.sh.j2 dest=/usr/local/bin/letsencrypt_remove.sh mode=0755
 
 - name: copy cron script
-  copy: src=letsencrypt_cron.sh dest=/usr/local/bin/letsencrypt_cron.sh mode=0755
+  template: src=letsencrypt_cron.sh.j2 dest=/usr/local/bin/letsencrypt_cron.sh mode=0755
 
 - name: install cron
   cron: name="letsencrypt_cron" minute="0" hour="5" user="letsencrypt"
@@ -48,7 +74,18 @@
   when: letsencrypt_activate_cron == true
 
 - name: copy lets's encrypt intermediate certificate
-  copy: src=lets-encrypt-x3-cross-signed.pem
-        dest=/var/lib/letsencrypt/letsencrypt_intermediate.pem
-        owner=letsencrypt group=letsencrypt mode=0644
+  copy: 
+    src: "{{ item }}"
+    dest: "{{ letsencrypt_lib_dir }}/{{ item }}"
+    owner: letsencrypt
+    group: letsencrypt
+    mode: 0644
+  loop:
+    - lets-encrypt-r3-cross-signed.pem
+
+- name: Use one of the copied cert for generation
+  copy:
+    src: "{{ letsencrypt_lib_dir }}/lets-encrypt-r3-cross-signed.pem"
+    dest: "{{ letsencrypt_lib_dir }}/letsencrypt_intermediate.pem"
+    remote_src: yes
 

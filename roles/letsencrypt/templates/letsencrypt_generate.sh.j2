@@ -5,7 +5,7 @@
 
 # Version 1.1.0
 
-BASEDIR=/var/lib/letsencrypt
+BASEDIR={{ letsencrypt_lib_dir }}
 CHALLENGEDIR=$BASEDIR/challenges/
 ACCOUNT_KEY=$BASEDIR/private/account.key
 
@@ -77,7 +77,12 @@ then
     if [ -f $DOMAIN_CRT ]; then
         cp $DOMAIN_CRT $DOMAIN_CRT.bak
     fi
-    python /usr/local/bin/acme_tiny.py --account-key $ACCOUNT_KEY --csr $DOMAIN_CSR --acme-dir $CHALLENGEDIR > $DOMAIN_CRT
+    if [ -f /usr/bin/python3 ]; then
+        python3 /usr/local/bin/acme_tiny.py --account-key $ACCOUNT_KEY --csr $DOMAIN_CSR --acme-dir $CHALLENGEDIR > $DOMAIN_CRT
+    else
+        python  /usr/local/bin/acme_tiny.py --account-key $ACCOUNT_KEY --csr $DOMAIN_CSR --acme-dir $CHALLENGEDIR > $DOMAIN_CRT
+    fi
+
     if [ $? -ne 0 ]; then
         if [ -f $DOMAIN_CRT ]; then
             if [ -f $DOMAIN_CRT.bak ]; then

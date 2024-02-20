@@ -1,6 +1,6 @@
 
 location /.well-known/acme-challenge/ {
-    alias /var/lib/letsencrypt/challenges/;
+    alias {{ letsencrypt_lib_dir }}/challenges/;
     try_files $uri =404;
 }
 

@@ -1,9 +1,9 @@
 # declare the challenges directory for Let's Encrypt servers
 # To include in a virtual host on port 80
 
-Alias /.well-known/acme-challenge  /var/lib/letsencrypt/challenges
+Alias /.well-known/acme-challenge  {{ letsencrypt_lib_dir }}/challenges
 
-<Directory /var/lib/letsencrypt/challenges>
+<Directory {{ letsencrypt_lib_dir }}/challenges>
     Options -Indexes +FollowSymLinks
     AllowOverride All
     Order allow,deny
