@@ -1,0 +1,57 @@
+
+- set_fact:
+    letsencrypt_remove_web_snippets: false
+  when: letsencrypt_remove_web_snippets is not defined
+
+- name: remove scripts
+  file:
+    path: "/usr/local/bin/{{ item }}"
+    state: absent
+  loop:
+    - acme_tiny.py
+    - letsencrypt_generate.sh
+    - letsencrypt_preparekeys.sh
+    - letsencrypt_remove.sh
+    - letsencrypt_cron.sh
+  tags: [ letsencrypt ]
+
+- name: remove old useless lets's encrypt intermediate certificate
+  file:
+    path: "{{ letsencrypt_lib_dir }}/{{ item }}"
+    state: absent
+  loop:
+    - lets-encrypt-e1.pem
+    - lets-encrypt-e2.pem
+    - lets-encrypt-r3-cross-signed.pem
+    - lets-encrypt-x3-cross-signed.pem
+    - lets-encrypt-r3.pem
+    - lets-encrypt-r4-cross-signed.pem
+    - lets-encrypt-r4.pem
+    - letsencrypt_intermediate.pem
+  tags: [ letsencrypt ]
+
+- name: remove cron
+  cron:
+    name: "letsencrypt_cron"
+    user: "letsencrypt"
+    job: "/usr/local/bin/letsencrypt_cron.sh"
+    state: absent
+  tags: [ letsencrypt ]
+
+- name: remove apache snippet
+  file: path=/etc/apache2/snippets/letsencrypt_challenge.conf state=absent
+  when: letsencrypt_web_server == "apache" and letsencrypt_remove_web_snippets
+  tags: [ letsencrypt ]
+
+- name: remove apache snippet for redirection
+  file: path=/etc/apache2/snippets/letsencrypt_redirect80.conf state=absent
+  when: letsencrypt_web_server == "apache" and letsencrypt_remove_web_snippets
+  tags: [ letsencrypt ]
+
+- name: copy nginx snippet
+  file: path=/etc/nginx/snippets/letsencrypt_challenge.conf state=absent
+  when: letsencrypt_web_server == "nginx" and letsencrypt_remove_web_snippets
+  tags: [ letsencrypt ]
+
+
+

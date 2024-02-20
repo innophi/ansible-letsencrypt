@@ -64,6 +64,9 @@ if [ "$DEACTIVATE" == "" ]; then
     if [ -f "$DOMAIN_CRT" ]; then
         rm -f "$DOMAIN_CRT"
     fi
+    if [ -f "$DOMAIN_CRT.bak" ]; then
+        rm -f "$DOMAIN_CRT.bak"
+    fi
     if [ -f "$DOMAIN_KEY" ]; then
         rm -f "$DOMAIN_KEY"
     fi
