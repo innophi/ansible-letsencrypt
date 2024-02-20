@@ -18,7 +18,7 @@
   when: item.cert != ""
 
 - name: Install pems
-  shell: cat {{ letsencrypt_lib_dir }}/certs/{{ item.name }}.crt {{ letsencrypt_lib_dir }}/letsencrypt_intermediate.pem > {{ letsencrypt_lib_dir }}/certs/{{ item.name }}.pem
+  shell: cp {{ letsencrypt_lib_dir }}/certs/{{ item.name }}.crt {{ letsencrypt_lib_dir }}/certs/{{ item.name }}.pem
   args:
      creates: "{{ letsencrypt_lib_dir }}/certs/{{ item.name }}.pem"
   with_items: "{{ letsencrypt_certificates }}"

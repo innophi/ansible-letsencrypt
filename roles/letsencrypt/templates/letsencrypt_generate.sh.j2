@@ -1,5 +1,5 @@
 #!/bin/bash
-# (c) 2017 Innophi
+# (c) 2017-2024 Innophi
 # For the full copyright and license information (MIT), see the LICENSE
 # file that was distributed with this source code.
 
@@ -92,9 +92,8 @@ then
             fi
         fi
         exit 3
-    else
-        cat $DOMAIN_CRT $BASEDIR/letsencrypt_intermediate.pem > $DOMAIN_CHAINED_PEM
     fi
+    cp $DOMAIN_CRT $DOMAIN_CHAINED_PEM
 
     if [ "$RELOAD_WEB" == "y" ]; then
         if [ -x /usr/sbin/nginx ]; then

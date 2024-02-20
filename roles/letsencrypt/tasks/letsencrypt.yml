@@ -73,19 +73,17 @@
         job="/usr/local/bin/letsencrypt_cron.sh"
   when: letsencrypt_activate_cron == true
 
-- name: copy lets's encrypt intermediate certificate
-  copy: 
-    src: "{{ item }}"
-    dest: "{{ letsencrypt_lib_dir }}/{{ item }}"
-    owner: letsencrypt
-    group: letsencrypt
-    mode: 0644
+- name: remove old useless lets's encrypt intermediate certificate
+  file:
+    path: "{{ letsencrypt_lib_dir }}/{{ item }}"
+    state: absent
   loop:
+    - lets-encrypt-e1.pem
+    - lets-encrypt-e2.pem
     - lets-encrypt-r3-cross-signed.pem
-
-- name: Use one of the copied cert for generation
-  copy:
-    src: "{{ letsencrypt_lib_dir }}/lets-encrypt-r3-cross-signed.pem"
-    dest: "{{ letsencrypt_lib_dir }}/letsencrypt_intermediate.pem"
-    remote_src: yes
+    - lets-encrypt-x3-cross-signed.pem
+    - lets-encrypt-r3.pem
+    - lets-encrypt-r4-cross-signed.pem
+    - lets-encrypt-r4.pem
+    - letsencrypt_intermediate.pem
 

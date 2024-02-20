@@ -24,9 +24,7 @@ All data are hosted into a `/var/lib/letsencrypt` directory:
    It represents the list of domains for which a certificate should be generated and verified. 
 - `/var/lib/letsencrypt/private/`: contains private keys of certificates and CSR
 - `/var/lib/letsencrypt/certs/`: contains certificates for apache (crt) and nginx (pem)
-- `/var/lib/letsencrypt/private/account.key`: is your Let's Encrypt account key (see below)
-- `/var/lib/letsencrypt/letsencrypt_intermediate.pem`: is the intermediate 
-   certificate of Let's Encrypt (it is provided into `roles/letsencrypt/files/lets-encrypt-x3-cross-signed.pem`)
+- `/var/lib/letsencrypt/private/account.key`: it is your Let's Encrypt account key (see below)
 
 
 This repository provides an Ansible role that install and configure
